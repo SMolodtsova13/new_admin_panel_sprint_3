@@ -1,0 +1,152 @@
+services:
+  theatre-db:
+    container_name: theatre-db
+    image: postgres:16
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./simple_project/database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - .env
+
+  service:
+    container_name: service
+    build: ./simple_project/app
+    restart: always
+    expose:
+      - "8000"
+    env_file:
+      - .env 
+    depends_on:
+      - theatre-db
+      - elasticsearch  # Если ваш Django-приложение использует Elasticsearch
+    volumes:
+      - static:/opt/app/static
+      - media:/opt/app/media
+      - ./simple_project:/opt/app/simple_project
+
+  nginx:
+    build: ./simple_project/nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    restart: always
+    volumes:
+      - ./simple_project/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./simple_project/nginx/conf.d/site.conf:/etc/nginx/conf.d/default.conf
+      - static:/opt/app/static:ro
+      - media:/opt/app/media:ro
+    environment:
+      - ENABLE_IPV6=off
+    depends_on:
+      - service
+
+  elasticsearch:
+    image: docker.io/library/elasticsearch:7.17.10
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  etl:
+    # build: ./etl
+    build:
+      context: .
+      dockerfile: etl/Dockerfile
+    container_name: etl
+    restart: always
+    depends_on:
+      - theatre-db
+      - elasticsearch
+    env_file:
+      - .env
+    # entrypoint: ["/wait-for-it.sh", "theatre-db:5432", "--", "python", "src/etl.py"]
+    volumes:
+      - ./etl/state.json:/app/state.json
+      - ./etl:/opt/app  # код ETL
+      - ./simple_project:/opt/app/simple_project  # подключаем Django-приложение
+
+volumes:
+  postgres_data:
+  static: {}
+  media: {}
+  es_data:
+
+# services:
+#   theatre-db:
+#     container_name: theatre-db
+#     image: postgres:16
+#     restart: always
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#       - ./simple_project/database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+#     env_file:
+#       - .env
+
+#   service:
+#     container_name: service
+#     build: ./simple_project/app
+#     restart: always
+#     expose:
+#       - "8000"
+#     env_file:
+#       - .env 
+#       # - ./.env 
+#     depends_on:
+#       - theatre-db
+#     volumes:
+#       - static:/opt/app/static
+#       - media:/opt/app/media
+#       - ./simple_project:/opt/app/simple_project  # как и было
+
+#   nginx:
+#     build: ./simple_project/nginx
+    
+#     container_name: nginx
+#     ports:
+#       - "80:80"
+#     restart: always
+#     volumes:
+#       - ./simple_project/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+#       - ./simple_project/nginx/conf.d/site.conf:/etc/nginx/conf.d/default.conf
+#       - static:/opt/app/static:ro
+#       - media:/opt/app/media:ro
+#     environment:
+#       - ENABLE_IPV6=off
+#     depends_on:
+#       - service
+
+#   elasticsearch:
+#     image: docker.io/library/elasticsearch:7.17.10
+#     container_name: elasticsearch
+#     environment:
+#       - discovery.type=single-node
+#       - ES_JAVA_OPTS=-Xms512m -Xmx512m
+#     ports:
+#       - "9200:9200"
+#     volumes:
+#       - es_data:/usr/share/elasticsearch/data
+
+#   etl:
+#     build: ./etl
+#     container_name: etl
+#     restart: always
+#     depends_on:
+#       - theatre-db
+#       - elasticsearch
+#     env_file:
+#       - .env
+#     volumes:
+#       - ./etl/state.json:/app/state.json
+#       - ./etl:/opt/app  # код ETL
+#       - ./simple_project:/opt/app/simple_project  # 👈 подключаем Django-проект
+
+# volumes:
+#   postgres_data:
+#   static: {}
+#   media: {}
+#   es_data:

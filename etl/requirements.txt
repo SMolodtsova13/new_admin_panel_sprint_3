@@ -1,0 +1,13 @@
+requests
+psycopg2-binary==2.9.9
+elasticsearch==7.17.9
+python-dotenv==1.1.0
+backoff
+Django==5.1.6
+django-cors-headers==4.7.0
+django-extensions==3.2.3
+django-debug-toolbar==5.1.0
+psycopg
+psycopg-binary
+psycopg2-binary
+psycopg2-pool
