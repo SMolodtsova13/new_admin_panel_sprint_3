@@ -1,8 +1,7 @@
 import json
-import os
 import logging
+import os
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,8 @@ class JsonFileStorage:
             with open(self.file_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
-            logger.warning(f'Файл состояния {self.file_path} отсутствует или поврежден. Используется пустое состояние.')
+            logger.warning(f'Проблема с {self.file_path}. '
+                           'Используется пустое состояние.')
             return {}
 
     def save(self, data: dict):

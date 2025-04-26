@@ -8,7 +8,6 @@
 """
 import os
 
-
 DB_CONFIG = {
     'dbname': os.getenv('POSTGRES_DB', 'theatre'),
     'user': os.getenv('POSTGRES_USER', 'postgres'),
@@ -80,7 +79,7 @@ ES_INDEX_BODY = {
         "type": "text",
         "analyzer": "ru_en",
         "fields": {
-          "raw": { 
+          "raw": {
             "type":  "keyword"
           }
         }

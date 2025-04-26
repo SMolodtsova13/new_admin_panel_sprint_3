@@ -1,6 +1,8 @@
 from elasticsearch import Elasticsearch, helpers
+
 from config import ES_HOST, ES_INDEX
 from models import FilmWork
+
 
 class ESLoader:
     """

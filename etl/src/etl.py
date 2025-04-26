@@ -1,11 +1,13 @@
 import time
+
 from elasticsearch import Elasticsearch
-from config import STATE_FILE_PATH, ES_HOST, ES_INDEX, ES_INDEX_BODY
+
+from config import ES_HOST, ES_INDEX, ES_INDEX_BODY, STATE_FILE_PATH
 from extractor import PostgresExtractor
 from loader import ESLoader
-from storage import JsonFileStorage
-from state import State
 from models import FilmWork
+from state import State
+from storage import JsonFileStorage
 from utils import chunked
 
 RETRY_DELAY = 5  # задержка между циклами
@@ -19,17 +21,17 @@ def main():
     2. Проверяет и создаёт индекс, если нужно.
     3. В цикле: извлекает, преобразует, бандлит и обновляет состояние.
     """
-    # --- инициализация состояния и экстрактора
+    # инициализация состояния и экстрактора
     storage = JsonFileStorage(STATE_FILE_PATH)
     state = State(storage)
     extractor = PostgresExtractor(state)
 
-    # --- создаём клиент Elasticsearch и автоматически создаём индекс, если его нет
+    # создаём клиент Elasticsearch и автоматически создаём индекс, если его нет
     es = Elasticsearch(ES_HOST)
     if not es.indices.exists(index=ES_INDEX):
         es.indices.create(index=ES_INDEX, body=ES_INDEX_BODY)
 
-    # --- инициализируем загрузчик (он берёт ES_HOST и ES_INDEX из config)
+    # инициализируем загрузчик (он берёт ES_HOST и ES_INDEX из config)
     loader = ESLoader()
 
     while True:
