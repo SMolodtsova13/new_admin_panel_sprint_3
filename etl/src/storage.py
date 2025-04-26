@@ -1,36 +1,46 @@
-import abc
 import json
 import os
-from typing import Any, Dict
+import logging
+from typing import Any
 
 
-class BaseStorage(abc.ABC):
-    @abc.abstractmethod
-    def save_state(self, state: Dict[str, Any]) -> None:
-        pass
-
-    @abc.abstractmethod
-    def retrieve_state(self) -> Dict[str, Any]:
-        pass
+logger = logging.getLogger(__name__)
 
 
-class JsonFileStorage(BaseStorage):
-    def __init__(self, file_path: str) -> None:
+class JsonFileStorage:
+    """Класс для хранения состояния в JSON-файле."""
+    def __init__(self, file_path: str):
+        if os.path.isdir(file_path):
+            raise RuntimeError(
+                f'ОШИБКА: путь "{file_path}" — директория, а ожидался файл. '
+                'Проверь настройки volumes и переменную STATE_FILE_PATH.'
+            )
         self.file_path = file_path
 
-    def save_state(self, state: Dict[str, Any]) -> None:
-        try:
-            with open(self.file_path, 'w', encoding='utf-8') as f:
-                json.dump(state, f, ensure_ascii=False, indent=4)
-        except (OSError, IOError) as e:
-            print(f"Ошибка при сохранении состояния: {e}")
-
-    def retrieve_state(self) -> Dict[str, Any]:
+        # Если файла нет — создаём пустой файл
         if not os.path.exists(self.file_path):
-            return {}
+            with open(self.file_path, 'w', encoding='utf-8') as f:
+                json.dump({}, f)
+            logger.info(f'Создан новый файл состояния: {self.file_path}')
+
+        self.data = self._load()
+
+    def _load(self) -> dict:
         try:
             with open(self.file_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except (json.JSONDecodeError, OSError, IOError) as e:
-            print(f"Ошибка при загрузке состояния: {e}")
+        except (FileNotFoundError, json.JSONDecodeError):
+            logger.warning(f'Файл состояния {self.file_path} отсутствует или поврежден. Используется пустое состояние.')
             return {}
+
+    def save(self, data: dict):
+        """Сохраняет состояние в JSON-файл."""
+        with open(self.file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+
+    def get_state(self) -> dict:
+        return self.data
+
+    def set_state(self, key: str, value: Any):
+        self.data[key] = value
+        self.save(self.data)

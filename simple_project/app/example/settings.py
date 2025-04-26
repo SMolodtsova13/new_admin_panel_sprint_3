@@ -33,9 +33,6 @@ ES_INDEX_SCHEMA_PATH = os.getenv('ES_INDEX_SCHEMA_PATH', 'movies_index_schema.js
 
 POLL_INTERVAL = int(os.getenv('POLL_INTERVAL', 10))
 
-
-# ES_INDEX_NAME = 'movies'
-
 INSTALLED_APPS = [
     'corsheaders',
     'django.contrib.admin',

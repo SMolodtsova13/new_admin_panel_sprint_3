@@ -1,20 +1,22 @@
 from elasticsearch import Elasticsearch, helpers
-from typing import List
+from config import ES_HOST, ES_INDEX
+from models import FilmWork
 
+class ESLoader:
+    """
+    Загружает список FilmWork в Elasticsearch через bulk API.
+    """
+    def __init__(self):
+        self.client = Elasticsearch(ES_HOST)
 
-
-class ElasticsearchLoader:
-    def __init__(self, es_client: Elasticsearch, index_name: str):
-        self.es = es_client
-        self.index = index_name
-
-    def bulk_upload(self, docs: List[dict]) -> None:
+    def load(self, data: list[FilmWork]):
+        """Индексирует пачку фильмов в указанный индекс."""
         actions = [
             {
-                "_index": self.index,
-                "_id": doc['id'],
-                "_source": doc
+                '_index': ES_INDEX,
+                '_id': str(fw.id),
+                '_source': fw.__dict__,
             }
-            for doc in docs
+            for fw in data
         ]
-        helpers.bulk(self.es, actions)
+        helpers.bulk(self.client, actions)

@@ -1,45 +1,45 @@
-# services:
-#   theatre-db:
-#     container_name: theatre-db
-#     image: postgres:16
-#     restart: always
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data
-#       - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
-#     env_file:
-#       - ./.env
+services:
+  theatre-db:
+    container_name: theatre-db
+    image: postgres:16
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - ./.env
 
-#   service:
-#     container_name: service
-#     build: app
-#     restart: always
-#     expose:
-#       - "8000"
-#     env_file:
-#       - ./.env 
-#     depends_on:
-#       - theatre-db
-#     volumes:
-#       - static:/opt/app/static
-#       - media:/opt/app/media
+  service:
+    container_name: service
+    build: app
+    restart: always
+    expose:
+      - "8000"
+    env_file:
+      - ./.env 
+    depends_on:
+      - theatre-db
+    volumes:
+      - static:/opt/app/static
+      - media:/opt/app/media
 
-#   nginx:
-#     build: nginx
-#     container_name: nginx
-#     ports:
-#       - "80:80"
-#     restart: always
-#     volumes:
-#       - /simple_project/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-#       - /simple_project/nginx/conf.d/site.conf:/etc/nginx/conf.d/default.conf
-#       - static:/opt/app/static:ro
-#       - media:/opt/app/media:ro
-#     environment:
-#       - ENABLE_IPV6=off
-#     depends_on:
-#       - service
+  nginx:
+    build: nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    restart: always
+    volumes:
+      - /simple_project/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /simple_project/nginx/conf.d/site.conf:/etc/nginx/conf.d/default.conf
+      - static:/opt/app/static:ro
+      - media:/opt/app/media:ro
+    environment:
+      - ENABLE_IPV6=off
+    depends_on:
+      - service
 
-# volumes:
-#   postgres_data:
-#   static: {}
-#   media: {}
+volumes:
+  postgres_data:
+  static: {}
+  media: {}

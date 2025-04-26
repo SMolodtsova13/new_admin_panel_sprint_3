@@ -1,28 +1,24 @@
-from dataclasses import dataclass, field
-from typing import List
-from datetime import datetime
+from dataclasses import dataclass
+from uuid import UUID
+from typing import List, Optional
 
 
 @dataclass
 class Person:
-    id: str
+    id: UUID
     name: str
 
 
 @dataclass
-class Genre:
-    id: str
-    name: str
-
-
-@dataclass
-class Filmwork:
-    id: str
+class FilmWork:
+    id: UUID
+    imdb_rating: Optional[float]
     title: str
-    description: str
-    imdb_rating: float
-    genre: List[Genre] = field(default_factory=list)
-    actors: List[Person] = field(default_factory=list)
-    writers: List[Person] = field(default_factory=list)
-    directors: List[Person] = field(default_factory=list)
-    modified: datetime = None
+    description: Optional[str]
+    genres: List[str]
+    directors: List[Person]
+    actors: List[Person]
+    writers: List[Person]
+    directors_names: List[str]
+    actors_names: List[str]
+    writers_names: List[str]
