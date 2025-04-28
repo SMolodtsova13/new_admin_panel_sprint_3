@@ -1,9 +1,8 @@
-import time
 import logging
-
-from elasticsearch import Elasticsearch
+import time
 
 from config import ES_HOST, ES_INDEX, ES_INDEX_BODY, STATE_FILE_PATH
+from elasticsearch import Elasticsearch
 from extractor import PostgresExtractor
 from loader import ESLoader
 from models import FilmWork
@@ -14,7 +13,10 @@ from utils import chunked
 RETRY_DELAY = 5  # задержка между циклами
 BATCH_SIZE = 100  # размер пакета для bulk
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
 def main():
@@ -56,7 +58,9 @@ def main():
 
         # Вычисляем новую точку останова
         latest = max(
-            (row.get('modified') for row in raw_data if row.get('modified')), default=None
+            (
+                row.get('modified') for row in raw_data if row.get('modified')
+            ), default=None
         )
 
         # Создаём объекты FilmWork без поля modified
@@ -70,10 +74,11 @@ def main():
             loader.load(batch)
             logging.info(f'Загружено в Elasticsearch: {len(batch)} записей')
 
-        # Обновляем состояние
         if latest is not None:
             state.set('modified', latest.isoformat())
-            logging.info(f'Обновлено состояние: modified = {latest.isoformat()}')
+            logging.info(
+                f'Обновлено состояние: modified = {latest.isoformat()}'
+            )
 
         time.sleep(RETRY_DELAY)
 

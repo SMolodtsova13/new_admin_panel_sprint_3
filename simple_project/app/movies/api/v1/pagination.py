@@ -3,7 +3,6 @@ from math import ceil
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-
 PAGE_SIZE = 50
 MAX_PAGE_SIZE = 100
 

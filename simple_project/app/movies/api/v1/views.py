@@ -1,8 +1,7 @@
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-
 from movies.api.v1.pagination import FilmWorkPagination
 from movies.api.v1.serializers import FilmWorkSerializer
 from movies.models import FilmWork
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 
 class FilmWorkListView(ListAPIView):

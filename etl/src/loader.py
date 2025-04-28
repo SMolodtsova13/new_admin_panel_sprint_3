@@ -1,12 +1,14 @@
-import backoff
 import logging
-from elasticsearch import Elasticsearch, helpers
-from elasticsearch.exceptions import ConnectionError as ESConnError, TransportError
 
+import backoff
 from config import ES_HOST, ES_INDEX
+from elasticsearch import Elasticsearch, helpers
+from elasticsearch.exceptions import ConnectionError as ESConnError
+from elasticsearch.exceptions import TransportError
 from models import FilmWork
 
 logger = logging.getLogger(__name__)
+
 
 class ESLoader:
     """

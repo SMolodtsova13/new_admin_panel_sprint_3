@@ -1,9 +1,8 @@
-import time
 import logging
+import time
 
 import psycopg2
 import psycopg2.extras
-
 from config import DB_CONFIG
 from state import State
 
@@ -15,7 +14,12 @@ class PostgresExtractor:
     Извлекает фильмы из Postgres, изменённые после заданного timestamp.
     Поддерживает поэтапную выгрузку данных.
     """
-    def __init__(self, state: State, max_retries: int = 5, retry_delay: int = 5):
+    def __init__(
+            self,
+            state: State,
+            max_retries: int = 5,
+            retry_delay: int = 5
+    ):
         """
         Инициализирует подключение к БД с ограниченным числом попыток.
         Args:
@@ -30,10 +34,14 @@ class PostgresExtractor:
                 self.conn = psycopg2.connect(**DB_CONFIG)
                 return
             except psycopg2.OperationalError as e:
-                logger.error(f'Не удалось подключиться к PostgreSQL (попытка {attempts+1}): {e}')
+                logger.error(
+                    f'Не удалось подключиться к БД (попытка {attempts+1}): {e}'
+                )
                 attempts += 1
                 time.sleep(retry_delay)
-        raise ConnectionError(f'Не удалось подключиться к PostgreSQL после {max_retries} попыток')
+        raise ConnectionError(
+            f'Не удалось подключиться к БД после {max_retries} попыток'
+        )
 
     def extract_movies(self, updated_since: str):
         """
@@ -91,7 +99,9 @@ class PostgresExtractor:
                         'id': row['id'],
                         'modified': row['modified'],
                         'imdb_rating': row['imdb_rating'],
-                        'title': ('' if row['title'] == 'N/A' else row['title']),
+                        'title': (
+                            '' if row['title'] == 'N/A' else row['title']
+                        ),
                         'description': (
                             '' if row['description'] == 'N/A' else row['description']
                         ),
