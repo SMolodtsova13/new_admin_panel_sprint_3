@@ -71,16 +71,9 @@ services:
         condition: service_healthy
       theatre-db:
         condition: service_started
-    environment:
-      POSTGRES_DB: theatre
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
-      SQL_HOST: theatre-db
-      SQL_PORT: 5432
-      ES_HOST: http://elasticsearch:9200
-      STATE_FILE_PATH: state.json
+    env_file:
+      - .env
     volumes:
-      - ./etl:/opt/app
       - ./simple_project:/opt/app/simple_project
 
 volumes:
