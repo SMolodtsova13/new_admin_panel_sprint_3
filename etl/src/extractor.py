@@ -3,6 +3,7 @@ import time
 
 import psycopg2
 import psycopg2.extras
+
 from config import DB_CONFIG
 from state import State
 
@@ -58,19 +59,26 @@ class PostgresExtractor:
         ) as cur:
             cur.execute('''
                 WITH updated_filmworks AS (
-                    SELECT fw.id
+                        SELECT fw.id,
+                            GREATEST(
+                                MAX(fw.modified),
+                                MAX(gfw.created),
+                                MAX(pfw.created)
+                            ) AS max_modified
                     FROM content.film_work fw
                     LEFT JOIN content.genre_film_work gfw ON
                         gfw.film_work_id = fw.id
                     LEFT JOIN content.person_film_work pfw ON
                         pfw.film_work_id = fw.id
-                    WHERE fw.modified > %s
-                       OR gfw.created > %s
-                       OR pfw.created > %s
                     GROUP BY fw.id
+                    HAVING GREATEST(
+                        MAX(fw.modified),
+                        MAX(gfw.created),
+                        MAX(pfw.created)
+                    ) > %s
                 )
                 SELECT fw.id,
-                       fw.modified,
+                       ufw.max_modified AS modified,
                        fw.rating AS imdb_rating,
                        fw.title,
                        fw.description,
@@ -79,6 +87,7 @@ class PostgresExtractor:
                         DISTINCT p.id || ':' || p.full_name || ':' || pfw.role
                         ) AS persons
                 FROM content.film_work fw
+                JOIN updated_filmworks ufw ON ufw.id = fw.id
                 LEFT JOIN content.genre_film_work gfw ON
                         gfw.film_work_id = fw.id
                 LEFT JOIN content.genre g ON
@@ -86,9 +95,8 @@ class PostgresExtractor:
                 LEFT JOIN content.person_film_work pfw ON
                         pfw.film_work_id = fw.id
                 LEFT JOIN content.person p ON p.id = pfw.person_id
-                WHERE fw.id IN (SELECT id FROM updated_filmworks)
-                GROUP BY fw.id
-            ''', (updated_since, updated_since, updated_since))
+                GROUP BY fw.id, ufw.max_modified, fw.rating, fw.title, fw.description
+            ''', (updated_since,))
 
             fetch_size = 100
             rows = cur.fetchmany(fetch_size)
@@ -99,12 +107,8 @@ class PostgresExtractor:
                         'id': row['id'],
                         'modified': row['modified'],
                         'imdb_rating': row['imdb_rating'],
-                        'title': (
-                            '' if row['title'] == 'N/A' else row['title']
-                        ),
-                        'description': (
-                            '' if row['description'] == 'N/A' else row['description']
-                        ),
+                        'title': '' if row['title'] == 'N/A' else row['title'],
+                        'description': '' if row['description'] == 'N/A' else row['description'],
                         'genres': row['genres'] or [],
                         'actors': [],
                         'writers': [],
@@ -114,9 +118,8 @@ class PostgresExtractor:
                         'directors_names': [],
                     }
                     for pid, name, role in persons:
-                        person = {'id': pid, 'name': name}
-                        fw[role + 's'].append(person)
-                        fw[role + 's_names'].append(name)
+                        fw[f"{role}s"].append({'id': pid, 'name': name})
+                        fw[f"{role}s_names"].append(name)
                     result.append(fw)
                 rows = cur.fetchmany(fetch_size)
         return result

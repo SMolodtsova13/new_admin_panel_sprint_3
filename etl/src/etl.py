@@ -79,7 +79,6 @@ def main():
             logging.info(
                 f'Обновлено состояние: modified = {latest.isoformat()}'
             )
-
         time.sleep(RETRY_DELAY)
 
 
